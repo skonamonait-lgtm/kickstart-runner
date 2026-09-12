@@ -24,7 +24,21 @@ app.get('/webhook', (req, res) => {
     return res.sendStatus(403);
 });
 
-// 2. Main Processing Router
+// 2. Clear Outbound Message Delivery Engine
+async function sendWhatsAppMessage(recipientPhone, messageText) {
+    try {
+        const targetUrl = 'https://facebook.com';
+        await axios.post(targetUrl,
+            { messaging_product: "whatsapp", recipient_type: "individual", to: recipientPhone, type: "text", text: { preview_url: true, body: messageText } },
+            { headers: { 'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim(), 'Content-Type': 'application/json' } }
+        );
+        console.log(`✉️ Outbound WhatsApp text pushed successfully to customer!`);
+    } catch (metaError) {
+        console.error("❌ Outbound WhatsApp delivery failed:", metaError.response?.data || metaError.message);
+    }
+}
+
+// 3. Main Processing Router
 app.post('/webhook', async (req, res) => {
     try {
         const body = req.body;
@@ -40,7 +54,7 @@ app.post('/webhook', async (req, res) => {
             console.log(`\n========================================`);
             console.log(`📱 CONNECTED USER INTERACTION: ${customerName} (${customerPhone})`);
 
-            // 🛒 MODE A: Incoming Shopping Carts (Your active customer orders)
+            // 🛒 MODE A: Incoming Shopping Carts (Active customer orders)
             if (messageData.type === 'order') {
                 const orderItems = messageData.order.product_items;
                 console.log(`🛒 Cart contents detected! Summarizing grand total...`);
@@ -53,35 +67,38 @@ app.post('/webhook', async (req, res) => {
                     console.log(`   - SKU: ${item.product_retailer_id} | Qty: ${quantity} | Price: R${item.item_price}`);
                 });
 
-                const deliveryFeeCents = 5000; // Flat R50.00 delivery running fee
+                const deliveryFeeCents = 5000; 
                 const grandTotalCents = produceTotalCents + deliveryFeeCents;
                 const grandTotalRand = (grandTotalCents / 100).toFixed(2);
                 
-                console.log(`💰 Produce Subtotal: R${(produceTotalCents / 100).toFixed(2)}`);
-                console.log(`🚚 Adding Reseller Delivery Fee: R50.00`);
-                console.log(`🎯 Final Bill: R${grandTotalRand}`);
+                console.log(`🎯 Target Total Bill Calculation: R${grandTotalRand}`);
 
+                let checkoutUrl = "";
                 try {
-                    // 🌟 OFFICIAL BACKEND API KEYWORDS BALANCED
                     const yocoResponse = await axios.post('https://yoco.com', 
                         { amount: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
-                        { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY, 'Content-Type': 'application/json' } }
+                        { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                     );
-                    
-                    const checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
-                    console.log(`🔥 YOCO HOSTED INVOICE READY: ${checkoutUrl}`);
-                    
-                    const customerInvoiceText = `Hi ${customerName}! 👋\n\nThank you for ordering with Kickstart Resellers. We've verified your farm produce cart items:\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🚚 Reseller Delivery: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Click the link below to settle securely via card or device payment:\n👉 ${checkoutUrl}\n\nYour fresh crate locks in for delivery immediately upon payment confirmation! 🥦🚚`;
-                    
-                    await axios.post(
-                        'https://facebook.com',
-                        { messaging_product: "whatsapp", recipient_type: "individual", to: customerPhone, type: "text", text: { preview_url: true, body: customerInvoiceText } },
-                        { headers: { 'Authorization': 'Bearer ' + META_ACCESS_TOKEN, 'Content-Type': 'application/json' } }
-                    );
-                    console.log(`✉️ Outbound WhatsApp text pushed successfully to customer!`);
-                    
+                    checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
                 } catch (yocoError) {
-                    console.error("❌ Yoco processing endpoint exception:", yocoError.response?.data || yocoError.message);
+                    console.log("❌ Production Endpoint failed, checking staging fallback...");
+                    try {
+                        const fallbackResponse = await axios.post('https://yoco.com', 
+                            { amountInCents: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
+                            { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
+                        );
+                        checkoutUrl = fallbackResponse.data.redirectUrl || fallbackResponse.data.url;
+                    } catch (err) {
+                        console.error("❌ Double API Authentication Failure:", err.response?.data || err.message);
+                    }
+                }
+                
+                if (checkoutUrl) {
+                    console.log(`🔥 YOCO HOSTED INVOICE READY: ${checkoutUrl}`);
+                    const customerInvoiceText = `Hi ${customerName}! 👋\n\nThank you for ordering with Kickstart Resellers. We've verified your farm produce cart items:\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🚚 Reseller Delivery: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Click the link below to settle securely via card or device payment:\n👉 ${checkoutUrl}\n\nYour fresh crate locks in for delivery immediately upon payment confirmation! 🥦🚚`;
+                    await sendWhatsAppMessage(customerPhone, customerInvoiceText);
+                } else {
+                    console.log("⚠️ Link parsing rejected by Gateway constraints.");
                 }
                 
             // 💬 MODE B: Regular Text Messages (Dashboard Test Trigger)
@@ -90,28 +107,32 @@ app.post('/webhook', async (req, res) => {
                 console.log(`💬 Inbound text received: "${textReceived}"`);
 
                 if (textReceived === 'test' || textReceived === 'this is a text message') {
-                    console.log(`🔄 Test sequence engaged! Generating sample invoice token...`);
+                    console.log(`🔄 Test sequence engaged! Requesting live link...`);
+                    
+                    let checkoutUrl = "";
                     try {
-                        // 🌟 OFFICIAL BACKEND API KEYWORDS BALANCED
                         const yocoResponse = await axios.post('https://yoco.com', 
                             { amount: 15000, currency: "ZAR", successUrl: "https://whatsapp.com" },
-                            { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY, 'Content-Type': 'application/json' } }
+                            { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                         );
-                        
-                        const checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
-                        console.log(`🔥 YOCO MOCK INVOICE READY: ${checkoutUrl}`);
-                        
-                        const testMessageBody = `Hello! This is a live end-to-end connection confirmation from Kickstart Resellers. Your mock balance total including delivery is *R150.00*. Process sample checkout here: ${checkoutUrl}`;
-                        
-                        await axios.post(
-                            'https://facebook.com',
-                            { messaging_product: "whatsapp", recipient_type: "individual", to: customerPhone, type: "text", text: { preview_url: true, body: testMessageBody } },
-                            { headers: { 'Authorization': 'Bearer ' + META_ACCESS_TOKEN, 'Content-Type': 'application/json' } }
-                        );
-                        console.log(`✉️ Outbound WhatsApp text pushed successfully to customer!`);
-                        
+                        checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
                     } catch (yocoError) {
-                        console.error("❌ Yoco test sequence exception:", yocoError.response?.data || yocoError.message);
+                        console.log("❌ Production Endpoint failed, checking staging fallback...");
+                        try {
+                            const fallbackResponse = await axios.post('https://yoco.com', 
+                                { amountInCents: 15000, currency: "ZAR", successUrl: "https://whatsapp.com" },
+                                { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
+                            );
+                            checkoutUrl = fallbackResponse.data.redirectUrl || fallbackResponse.data.url;
+                        } catch (err) {
+                            console.error("❌ Double API Authentication Failure:", err.response?.data || err.message);
+                        }
+                    }
+                    
+                    if (checkoutUrl) {
+                        console.log(`🔥 YOCO MOCK INVOICE READY: ${checkoutUrl}`);
+                        const testMessageBody = `Hello! This is a live end-to-end connection confirmation from Kickstart Resellers. Your mock balance total including delivery is *R150.00*. Process sample checkout here: ${checkoutUrl}`;
+                        await sendWhatsAppMessage(customerPhone, testMessageBody);
                     }
                 }
             }
