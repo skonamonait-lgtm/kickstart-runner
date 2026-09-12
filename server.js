@@ -62,7 +62,7 @@ app.post('/webhook', async (req, res) => {
                 console.log(`🎯 Final Bill: R${grandTotalRand}`);
 
                 try {
-                    // 🌟 OFFICIAL BACKEND PRODUCTION GATEWAY ENDPOINT
+                    // 🌟 OFFICIAL BACKEND API KEYWORDS BALANCED
                     const yocoResponse = await axios.post('https://yoco.com', 
                         { amount: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
                         { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY, 'Content-Type': 'application/json' } }
@@ -92,7 +92,7 @@ app.post('/webhook', async (req, res) => {
                 if (textReceived === 'test' || textReceived === 'this is a text message') {
                     console.log(`🔄 Test sequence engaged! Generating sample invoice token...`);
                     try {
-                        // 🌟 OFFICIAL BACKEND PRODUCTION GATEWAY ENDPOINT
+                        // 🌟 OFFICIAL BACKEND API KEYWORDS BALANCED
                         const yocoResponse = await axios.post('https://yoco.com', 
                             { amount: 15000, currency: "ZAR", successUrl: "https://whatsapp.com" },
                             { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY, 'Content-Type': 'application/json' } }
