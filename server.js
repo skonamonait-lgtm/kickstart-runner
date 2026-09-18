@@ -30,7 +30,7 @@ app.post('/exchange-code', async (req, res) => {
                     client_id: META_APP_ID,
     client_secret: META_APP_SECRET,
     code: code,
-    redirect_uri: 'https://antibodies-soup-later-injured.trycloudflare.com/'
+    redirect_uri: 'https://kickstart-runner-production.onrender.com/'
                 }
             }
         );
