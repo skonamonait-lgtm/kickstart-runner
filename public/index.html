@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Kickstart WhatsApp Onboarding</title>
+</head>
+<body>
+
+    <h2>Kickstart WhatsApp Business Onboarding</h2>
+
+    <button onclick="launchWhatsAppSignup()">
+        Connect WhatsApp Business
+    </button>
+
+    <script>
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '1104151632136488',
+                cookie: true,
+                xfbml: true,
+                version: 'v23.0'
+            });
+        };
+
+        function launchWhatsAppSignup() {
+            FB.login(function (response) {
+    console.log("WHATSAPP SIGNUP RESPONSE:", response);
+
+    if (response.authResponse) {
+        console.log("SUCCESS - Authorization code received");
+        console.log("CODE:", response.authResponse.code);
+fetch('/exchange-code', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        code: response.authResponse.code
+    })
+})
+.then(res => res.json())
+.then(data => console.log("SERVER RESPONSE:", data))
+.catch(err => console.error("SERVER ERROR:", err));
+    } else {
+        console.log("LOGIN DID NOT COMPLETE:", response);
+    }
+}, {
+                config_id: '1411442164523842',
+                response_type: 'code',
+                override_default_response_type: true,
+                extras: {
+                    featureType: 'whatsapp_business_app_onboarding'
+                }
+            });
+        }
+
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+</body>
+</html>
