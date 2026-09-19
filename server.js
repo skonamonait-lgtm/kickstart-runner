@@ -9,6 +9,7 @@ app.use(express.static('public'));
 // ==========================================
 const YOCO_SECRET_KEY = "sk_live_320c671blVxJLZn61884c54a69dc";
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
 const VERIFY_TOKEN = "kickstart_runner_secret_2026";
 const META_APP_ID = "1104151632136488";
@@ -70,7 +71,7 @@ app.get('/webhook', (req, res) => {
 // 2. Clear Outbound Message Delivery Engine
 async function sendWhatsAppMessage(recipientPhone, messageText) {
     try {
-        const targetUrl = 'https://facebook.com';
+        const targetUrl = `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}/messages`;
         await axios.post(targetUrl,
             { messaging_product: "whatsapp", recipient_type: "individual", to: recipientPhone, type: "text", text: { preview_url: true, body: messageText } },
             { headers: { 'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim(), 'Content-Type': 'application/json' } }
@@ -80,7 +81,60 @@ async function sendWhatsAppMessage(recipientPhone, messageText) {
         console.error("❌ Outbound WhatsApp delivery failed:", metaError.response?.data || metaError.message);
     }
 }
+// 3. Approved WhatsApp Order Confirmation Template
+async function sendOrderConfirmationTemplate(recipientPhone, customerName, orderNumber, orderTotal) {
+    try {
+        const targetUrl = `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}/messages`;
 
+        await axios.post(
+            targetUrl,
+            {
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: recipientPhone,
+                type: "template",
+                template: {
+                    name: "runner_order_confirmation",
+                    language: {
+                        code: "en_US"
+                    },
+                    components: [
+                        {
+                            type: "body",
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: customerName
+                                },
+                                {
+                                    type: "text",
+                                    text: orderNumber
+                                },
+                                {
+                                    type: "text",
+                                    text: orderTotal
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log(`✉️ Order confirmation template sent successfully to ${recipientPhone}`);
+    } catch (metaError) {
+        console.error(
+            "❌ Order confirmation template failed:",
+            metaError.response?.data || metaError.message
+        );
+    }
+}
 // 3. Main Processing Router
 app.post('/webhook', async (req, res) => {
     try {
@@ -100,6 +154,7 @@ app.post('/webhook', async (req, res) => {
             // 🛒 MODE A: Incoming Shopping Carts (Active customer orders)
             if (messageData.type === 'order') {
                 const orderItems = messageData.order.product_items;
+                const orderNumber = messageData.order.order_id || `RUN-${Date.now()}`;
                 console.log(`🛒 Cart contents detected! Summarizing grand total...`);
                 
                 let produceTotalCents = 0;
@@ -113,12 +168,18 @@ app.post('/webhook', async (req, res) => {
                 const deliveryFeeCents = 5000; 
                 const grandTotalCents = produceTotalCents + deliveryFeeCents;
                 const grandTotalRand = (grandTotalCents / 100).toFixed(2);
+await sendOrderConfirmationTemplate(
+    customerPhone,
+    customerName,
+    orderNumber,
+    grandTotalRand
+);
                 
                 console.log(`🎯 Target Total Bill Calculation: R${grandTotalRand}`);
 
                 let checkoutUrl = "";
                 try {
-                    const yocoResponse = await axios.post('https://yoco.com', 
+                    const yocoResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
                         { amount: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
                         { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                     );
@@ -126,7 +187,7 @@ app.post('/webhook', async (req, res) => {
                 } catch (yocoError) {
                     console.log("❌ Production Endpoint failed, checking staging fallback...");
                     try {
-                        const fallbackResponse = await axios.post('https://yoco.com', 
+                        const fallbackResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
                             { amountInCents: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
                             { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                         );
@@ -136,13 +197,15 @@ app.post('/webhook', async (req, res) => {
                     }
                 }
                 
-                if (checkoutUrl) {
-                    console.log(`🔥 YOCO HOSTED INVOICE READY: ${checkoutUrl}`);
-                    const customerInvoiceText = `Hi ${customerName}! 👋\n\nThank you for ordering with Kickstart Resellers. We've verified your farm produce cart items:\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🚚 Reseller Delivery: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Click the link below to settle securely via card or device payment:\n👉 ${checkoutUrl}\n\nYour fresh crate locks in for delivery immediately upon payment confirmation! 🥦🚚`;
-                    await sendWhatsAppMessage(customerPhone, customerInvoiceText);
-                } else {
-                    console.log("⚠️ Link parsing rejected by Gateway constraints.");
-                }
+               if (checkoutUrl) {
+    console.log(`🔥 YOCO HOSTED INVOICE READY: ${checkoutUrl}`);
+
+    const customerPaymentText = `💳 Payment link for order ${orderNumber}\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🚚 Reseller Delivery: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Please use the secure link below to complete your payment:\n👉 ${checkoutUrl}\n\nYour order will be confirmed for delivery once payment is received. 🥦🚚`;
+
+    await sendWhatsAppMessage(customerPhone, customerPaymentText);
+} else {
+    console.log("⚠️ Yoco checkout link was not created. Order confirmation was still sent.");
+}
                 
             // 💬 MODE B: Regular Text Messages (Dashboard Test Trigger)
             } else if (messageData.type === 'text') {
@@ -154,7 +217,7 @@ app.post('/webhook', async (req, res) => {
                     
                     let checkoutUrl = "";
                     try {
-                        const yocoResponse = await axios.post('https://yoco.com', 
+                        const yocoResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
                             { amount: 15000, currency: "ZAR", successUrl: "https://whatsapp.com" },
                             { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                         );
@@ -162,7 +225,7 @@ app.post('/webhook', async (req, res) => {
                     } catch (yocoError) {
                         console.log("❌ Production Endpoint failed, checking staging fallback...");
                         try {
-                            const fallbackResponse = await axios.post('https://yoco.com', 
+                            const fallbackResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
                                 { amountInCents: 15000, currency: "ZAR", successUrl: "https://whatsapp.com" },
                                 { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                             );
