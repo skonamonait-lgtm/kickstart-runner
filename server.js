@@ -340,37 +340,10 @@ app.get('/check-waba', async (req, res) => {
             meta_error: error.response?.data || error.message
         });
     }
-});        const catalogId = "1384352583843730";
-        const retailerId = "ne59jdcywu";
-
-        const targetUrl =
-            `https://graph.facebook.com/v26.0/${catalogId}/products` +
-            `?retailer_id=${encodeURIComponent(retailerId)}`;
-
-        const response = await axios.get(targetUrl, {
-            headers: {
-                'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim()
-            }
-        });
-
-        console.log("✅ META PRODUCT FOUND:", response.data);
-
-        return res.json({
-            success: true,
-            meta_response: response.data
-        });
-
-    } catch (error) {
-        console.error(
-            "❌ META PRODUCT DIAGNOSTIC FAILED:",
-            error.response?.data || error.message
-        );
-
-        return res.status(500).json({
-            success: false,
-            meta_error: error.response?.data || error.message
-        });
-    }
 });
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Kickstart Runner Production Engine listening on port ${PORT}`));
+
+app.listen(PORT, () =>
+    console.log(`🚀 Kickstart Runner Production Engine listening on port ${PORT}`)
+);
