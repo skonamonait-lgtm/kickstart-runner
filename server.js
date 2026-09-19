@@ -1,4 +1,59 @@
-const express = require('express');
+app.use(express.static('public'));
+
+// ==========================================
+// 🧪 TEMPORARY PRODUCT MESSAGE TEST
+// ==========================================
+app.get('/test-product', async (req, res) => {
+    try {
+        const recipientPhone = "+27686097031";
+
+        const targetUrl = `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}/messages`;
+
+        await axios.post(
+            targetUrl,
+            {
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: recipientPhone,
+                type: "interactive",
+                interactive: {
+                    type: "product",
+                    body: {
+                        text: "🛒 Runner Test Product"
+                    },
+                    action: {
+                        catalog_id: "1384352583843730",
+                        product_retailer_id: "ne59jdcywu"
+                    }
+                }
+            },
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log("🛍️ Product Display Message sent successfully!");
+
+        return res.json({
+            success: true,
+            message: "Product message sent successfully"
+        });
+
+    } catch (error) {
+        console.error(
+            "❌ Product Display Message failed:",
+            error.response?.data || error.message
+        );
+
+        return res.status(500).json({
+            success: false,
+            error: "Product message failed"
+        });
+    }
+});
 const axios = require('axios');
 const app = express();
 app.use(express.json());
