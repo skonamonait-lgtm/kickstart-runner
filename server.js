@@ -1,4 +1,7 @@
-app.use(express.static('public'));
+
+const axios = require('axios');
+const app = express();
+app.use(express.json());
 
 // ==========================================
 // 🧪 TEMPORARY PRODUCT MESSAGE TEST
@@ -54,10 +57,7 @@ app.get('/test-product', async (req, res) => {
         });
     }
 });
-const axios = require('axios');
-const app = express();
-app.use(express.json());
-app.use(express.static('public'));
+
 
 // ==========================================
 // 🔴 PRODUCTION CONFIGURATION BOX
