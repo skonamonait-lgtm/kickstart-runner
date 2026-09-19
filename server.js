@@ -96,7 +96,7 @@ async function sendOrderConfirmationTemplate(recipientPhone, customerName, order
                 template: {
                     name: "runner_order_confirmation",
                     language: {
-                        code: "en_US"
+                        code: "en"
                     },
                     components: [
                         {
