@@ -154,7 +154,7 @@ app.post('/webhook', async (req, res) => {
             // 🛒 MODE A: Incoming Shopping Carts (Active customer orders)
             if (messageData.type === 'order') {
                 const orderItems = messageData.order.product_items;
-                const orderNumber = messageData.order.order_id || `RUN-${Date.now()}`;
+                const orderNumber = messageData.id || `RUN-${Date.now()}`;
                 console.log(`🛒 Cart contents detected! Summarizing grand total...`);
                 
                 let produceTotalCents = 0;
