@@ -314,7 +314,7 @@ app.get('/check-waba', async (req, res) => {
     try {
         const targetUrl =
             `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}` +
-            `?fields=id,display_phone_number,verified_name,whatsapp_business_account`;
+            `/whatsapp_business_account`;
 
         const response = await axios.get(targetUrl, {
             headers: {
@@ -322,7 +322,7 @@ app.get('/check-waba', async (req, res) => {
             }
         });
 
-        console.log("✅ META PHONE/WABA INFO:", response.data);
+        console.log("✅ META WABA INFO:", response.data);
 
         return res.json({
             success: true,
