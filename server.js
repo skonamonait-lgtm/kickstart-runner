@@ -307,39 +307,41 @@ app.get('/test-product', async (req, res) => {
         });
     }
 });
-// ==========================================
-// 🧪 TEMPORARY WABA CONNECTION DIAGNOSTIC
-// ==========================================
-app.get('/check-waba', async (req, res) => {
-    try {
-        const targetUrl =
-            `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}` +
-            `/whatsapp_business_account`;
+app.get('/check-product', async (req, res) => {
+  try {
+    const catalogId = "1384352583843730";
+    const retailerId = "ne59jdcywu";
 
-        const response = await axios.get(targetUrl, {
-            headers: {
-                'Authorization': 'Bearer ' + META_ACCESS_TOKEN.trim()
+    const response = await axios.get(
+      `https://graph.facebook.com/v20.0/${catalogId}/products`,
+      {
+        params: {
+          filter: JSON.stringify({
+            retailer_id: {
+              i_contains: retailerId
             }
-        });
+          }),
+          fields: "id,retailer_id,name,visibility,review_status"
+        },
+        headers: {
+          Authorization: `Bearer ${META_ACCESS_TOKEN}`
+        }
+      }
+    );
 
-        console.log("✅ META WABA INFO:", response.data);
+    console.log("✅ PRODUCT API CHECK:", response.data);
+    res.json(response.data);
 
-        return res.json({
-            success: true,
-            meta_response: response.data
-        });
+  } catch (error) {
+    console.error(
+      "❌ PRODUCT API CHECK FAILED:",
+      error.response?.data || error.message
+    );
 
-    } catch (error) {
-        console.error(
-            "❌ META WABA DIAGNOSTIC FAILED:",
-            error.response?.data || error.message
-        );
-
-        return res.status(500).json({
-            success: false,
-            meta_error: error.response?.data || error.message
-        });
-    }
+    res.status(500).json(
+      error.response?.data || { error: error.message }
+    );
+  }
 });
 
 const PORT = process.env.PORT || 3000;
