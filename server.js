@@ -252,13 +252,12 @@ await sendOrderConfirmationTemplate(
         return res.sendStatus(500);
     }
 });
-
 // ==========================================
 // 🧪 TEMPORARY PRODUCT MESSAGE TEST
 // ==========================================
 app.get('/test-product', async (req, res) => {
     try {
-        const recipientPhone = "+27686097031";
+        const recipientPhone = "27686097031";
 
         const targetUrl = `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}/messages`;
 
@@ -272,11 +271,11 @@ app.get('/test-product', async (req, res) => {
                 interactive: {
                     type: "product",
                     body: {
-                        text: "🛒 Runner Test Product"
+                        text: "🛒 Window cleaner"
                     },
                     action: {
                         catalog_id: "1384352583843730",
-                        product_retailer_id: "ne59jdcywu"
+                        product_retailer_id: "9ffb6mpulh"
                     }
                 }
             },
@@ -306,8 +305,7 @@ app.get('/test-product', async (req, res) => {
             error: "Product message failed"
         });
     }
-});
-app.get('/check-product', async (req, res) => {
+});app.get('/check-product', async (req, res) => {
   try {
     const catalogId = "1384352583843730";
     const retailerId = "ne59jdcywu";
