@@ -8,7 +8,7 @@ app.use(express.static('public'));
 // ==========================================
 // 🔴 PRODUCTION CONFIGURATION BOX
 // ==========================================
-const YOCO_SECRET_KEY = const YOCO_SECRET_KEY = process.env.YOCO_SECRET_KEY;
+const YOCO_SECRET_KEY = process.env.YOCO_SECRET_KEY;
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
