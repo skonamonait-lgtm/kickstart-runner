@@ -164,7 +164,7 @@ if (req.query.key !== 'kickstart2026') return res.sendStatus(403);
             },
             {
                 headers: {
-                    'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(),
+                    'Authorization': 'Bearer ' + process.env.YOCO_WEBHOOK_API_KEY.trim(),
                     'Content-Type': 'application/json'
                 }
             }
