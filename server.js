@@ -146,9 +146,6 @@ async function sendOrderConfirmationTemplate(recipientPhone, customerName, order
 // ==========================================
 // YOCO PAYMENT WEBHOOK
 // ==========================================
-// ==========================================
-// YOCO PAYMENT WEBHOOK
-// ==========================================
 app.post('/yoco-webhook', (req, res) => {
     console.log("💳 Yoco webhook received");
 
