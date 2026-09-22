@@ -152,6 +152,39 @@ app.post('/yoco-webhook', (req, res) => {
 
     res.sendStatus(200);
 });
+app.get('/create-yoco-subscription', async (req, res) => {
+if (req.query.key !== 'kickstart2026') return res.sendStatus(403);
+    try {
+        const response = await axios.post(
+            'https://api.yoco.com/v1/webhooks/subscriptions/',
+            {
+                event_types: ['payment.created'],
+                name: 'Kickstart Runner Payments',
+                notification_url: 'https://kickstart-runner-production.onrender.com/yoco-webhook'
+            },
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log("✅ Yoco subscription created:", response.data);
+
+        res.json(response.data);
+
+    } catch (error) {
+        console.error(
+            "❌ Yoco subscription failed:",
+            error.response?.data || error.message
+        );
+
+        res.status(500).json({
+            error: error.response?.data || error.message
+        });
+    }
+});
 // 3. Main Processing Router
 app.post('/webhook', async (req, res) => {
     try {
