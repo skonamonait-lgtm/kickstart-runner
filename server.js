@@ -245,7 +245,7 @@ await sendOrderConfirmationTemplate(
                 let checkoutUrl = "";
                 try {
                     const yocoResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
-                        { amount: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
+                        { amount: grandTotalCents, currency: "ZAR", successUrl: "https://kickstartresellers.co.za/payment-success" },
                         { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                     );
                     checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
