@@ -1,6 +1,7 @@
 
 const express = require('express');
 const axios = require('axios');
+const { Webhook } = require('standardwebhooks');
 const app = express();
 app.use(express.json({
     verify: (req, res, buf) => {
@@ -145,12 +146,29 @@ async function sendOrderConfirmationTemplate(recipientPhone, customerName, order
 // ==========================================
 // YOCO PAYMENT WEBHOOK
 // ==========================================
+// ==========================================
+// YOCO PAYMENT WEBHOOK
+// ==========================================
 app.post('/yoco-webhook', (req, res) => {
     console.log("💳 Yoco webhook received");
 
-    console.log("Raw body received:", !!req.rawBody);
+    try {
+        const webhook = new Webhook(process.env.YOCO_WEBHOOK_SECRET);
 
-    res.sendStatus(200);
+        const event = webhook.verify(
+            req.rawBody,
+            req.headers
+        );
+
+        console.log("✅ Yoco webhook signature verified");
+        console.log("📦 Event:", event);
+
+        res.sendStatus(200);
+
+    } catch (error) {
+        console.error("❌ Yoco webhook verification failed:", error.message);
+        res.sendStatus(400);
+    }
 });
 app.get('/create-yoco-subscription', async (req, res) => {
 if (req.query.key !== 'kickstart2026') return res.sendStatus(403);
