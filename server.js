@@ -2,7 +2,13 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-app.use(express.json());
+app.use(express.json({
+    verify: (req, res, buf) => {
+        if (req.originalUrl === '/yoco-webhook') {
+            req.rawBody = buf;
+        }
+    }
+}));
 app.use(express.static('public'));
 
 // ==========================================
@@ -136,6 +142,16 @@ async function sendOrderConfirmationTemplate(recipientPhone, customerName, order
         );
     }
 }
+// ==========================================
+// YOCO PAYMENT WEBHOOK
+// ==========================================
+app.post('/yoco-webhook', (req, res) => {
+    console.log("💳 Yoco webhook received");
+
+    console.log("Raw body received:", !!req.rawBody);
+
+    res.sendStatus(200);
+});
 // 3. Main Processing Router
 app.post('/webhook', async (req, res) => {
     try {
