@@ -168,6 +168,8 @@ app.post('/yoco-webhook', (req, res) => {
         const order = Object.values(customerStates)
     .find(state => state.orderRecord?.yocoCheckoutId === checkoutId);
 
+console.log("🔎 Looking for Checkout ID:", checkoutId);
+console.log("🔎 Stored Checkout IDs:", Object.values(customerStates).map(state => state.orderRecord?.yocoCheckoutId));
 console.log("📋 Matching order:", order?.orderRecord?.orderNumber || "NOT FOUND");
 
         res.sendStatus(200);
