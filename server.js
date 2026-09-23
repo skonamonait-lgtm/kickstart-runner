@@ -329,22 +329,15 @@ return res.sendStatus(200);
                 const textReceived = messageData.text.body.toLowerCase().trim();
                 const customerState = customerStates[customerPhone];
                 console.log(`💬 Inbound text received: "${textReceived}"`);
-
-                if (textReceived === 'test' || textReceived === 'this is a text message') {
+// Customer details flow
 if (customerState && customerState.step === "NAME") {
+
     if (textReceived === "yes") {
         customerState.officialName = customerName;
-        customerState.step = "LOCATION";
-
-        await sendWhatsAppMessage(
-            customerPhone,
-            `Thank you, ${customerState.officialName}. 📍\n\nPlease send us your delivery location.\n\nYou can type your address or use WhatsApp's location pin.`
-        );
-
-        return res.sendStatus(200);
+    } else {
+        customerState.officialName = messageData.text.body.trim();
     }
 
-    customerState.officialName = messageData.text.body.trim();
     customerState.step = "LOCATION";
 
     await sendWhatsAppMessage(
@@ -354,6 +347,8 @@ if (customerState && customerState.step === "NAME") {
 
     return res.sendStatus(200);
 }
+
+                    if (textReceived === 'test' || textReceived === 'this is a text message') {
                     console.log(`🔄 Test sequence engaged! Requesting live link...`);
                     
                     let checkoutUrl = "";
