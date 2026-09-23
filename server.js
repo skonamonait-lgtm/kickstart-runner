@@ -305,6 +305,7 @@ return res.sendStatus(200);
                         { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                     );
                     checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
+                    customerState.yocoCheckoutId = yocoResponse.data.id;
                 } catch (yocoError) {
                     console.log("❌ Production Endpoint failed, checking staging fallback...");
                     try {
