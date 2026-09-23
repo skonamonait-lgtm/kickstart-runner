@@ -309,7 +309,7 @@ return res.sendStatus(200);
                     console.log("❌ Production Endpoint failed, checking staging fallback...");
                     try {
                         const fallbackResponse = await axios.post('https://payments.yoco.com/api/checkouts', 
-                            { amountInCents: grandTotalCents, currency: "ZAR", successUrl: "https://whatsapp.com" },
+                            { amountInCents: grandTotalCents, currency: "ZAR", successUrl: "https://kickstartresellers.co.za/payment-successful/" },
                             { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                         );
                         checkoutUrl = fallbackResponse.data.redirectUrl || fallbackResponse.data.url;
@@ -487,7 +487,7 @@ if (customerState && customerState.step === "REVIEW") {
             {
                 amount: customerState.grandTotalCents,
                 currency: "ZAR",
-                successUrl: "https://whatsapp.com"
+                successUrl: "https://kickstartresellers.co.za/payment-successful/"
             },
             {
                 headers: {
