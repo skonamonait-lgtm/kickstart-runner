@@ -414,6 +414,64 @@ if (customerState && customerState.step === "INSTRUCTIONS") {
 
     return res.sendStatus(200);
 }
+// Customer correction flow
+if (customerState && customerState.step === "CORRECTION") {
+
+    if (textReceived === "name") {
+
+        customerState.step = "NAME";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `Please confirm the name for your order.\n\nYour current name is *${customerState.officialName}*.\n\nIf this is correct, reply *YES*.\nIf not, please reply with your full name.`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    if (textReceived === "location") {
+
+        customerState.step = "LOCATION";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `📍 Please send us your delivery location.\n\nYou can type your address or use WhatsApp's location pin.`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    if (textReceived === "time") {
+
+        customerState.step = "TIME";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `🏃 What time would you prefer your Runner?\n\nPlease reply with a preferred time, for example:\n*14:00–16:00*\nor\n*16:00–18:00*`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    if (textReceived === "instructions") {
+
+        customerState.step = "INSTRUCTIONS";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `Do you have any special instructions for your Runner?\n\nIf yes, please type them.\nIf none, reply *NONE*.`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    await sendWhatsAppMessage(
+        customerPhone,
+        `Please reply with one of these:\n\n*NAME*\n*LOCATION*\n*TIME*\n*INSTRUCTIONS*`
+    );
+
+    return res.sendStatus(200);
+}
 // Customer review confirmation flow
 if (customerState && customerState.step === "REVIEW") {
 
