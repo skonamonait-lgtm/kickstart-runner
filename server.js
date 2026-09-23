@@ -171,6 +171,10 @@ app.post('/yoco-webhook', (req, res) => {
 console.log("🔎 Looking for Checkout ID:", checkoutId);
 console.log("🔎 Stored Checkout IDs:", Object.values(customerStates).map(state => state.orderRecord?.yocoCheckoutId));
 console.log("📋 Matching order:", order?.orderRecord?.orderNumber || "NOT FOUND");
+if (order?.orderRecord) {
+    order.orderRecord.paymentStatus = "PAID";
+    console.log("💰 PAYMENT STATUS: PAID ✅");
+}
 
         res.sendStatus(200);
 
