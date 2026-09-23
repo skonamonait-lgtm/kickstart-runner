@@ -165,6 +165,10 @@ app.post('/yoco-webhook', (req, res) => {
         console.log("📦 Event:", event);
         const checkoutId = event.payload?.metadata?.checkoutId;
         console.log("🔑 Checkout ID:", checkoutId);
+        const order = Object.values(customerStates)
+    .find(state => state.orderRecord?.yocoCheckoutId === checkoutId);
+
+console.log("📋 Matching order:", order?.orderRecord?.orderNumber || "NOT FOUND");
 
         res.sendStatus(200);
 
