@@ -163,6 +163,8 @@ app.post('/yoco-webhook', (req, res) => {
 
         console.log("✅ Yoco webhook signature verified");
         console.log("📦 Event:", event);
+        const checkoutId = event.payload?.metadata?.checkoutId;
+        console.log("🔑 Checkout ID:", checkoutId);
 
         res.sendStatus(200);
 
