@@ -150,7 +150,7 @@ async function sendOrderConfirmationTemplate(recipientPhone, customerName, order
 // ==========================================
 // YOCO PAYMENT WEBHOOK
 // ==========================================
-app.post('/yoco-webhook', (req, res) => {
+app.post('/yoco-webhook', async (req, res) => {
     console.log("💳 Yoco webhook received");
 
     try {
@@ -174,6 +174,10 @@ console.log("📋 Matching order:", order?.orderRecord?.orderNumber || "NOT FOUN
 if (order?.orderRecord) {
     order.orderRecord.paymentStatus = "PAID";
     console.log("💰 PAYMENT STATUS: PAID ✅");
+await sendWhatsAppMessage(
+    order.customerPhone,
+    `✅ Payment received.\nOrder *${order.orderRecord.orderNumber}* is confirmed.\nThank you, ${order.orderRecord.customerName}. We are preparing your order.`
+);
 }
 
         res.sendStatus(200);
