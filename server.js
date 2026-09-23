@@ -249,7 +249,7 @@ app.post('/webhook', async (req, res) => {
             // 🛒 MODE A: Incoming Shopping Carts (Active customer orders)
             if (messageData.type === 'order') {
                 const orderItems = messageData.order.product_items;
-                const orderNumber = `RUN-${Date.now()}`;
+                const orderNumber = `KR-${Date.now()}`;
                 console.log(`🛒 Cart contents detected! Summarizing grand total...`);
                 
                 let produceTotalCents = 0;
@@ -263,6 +263,20 @@ app.post('/webhook', async (req, res) => {
                 const deliveryFeeCents = 5000; 
                 const grandTotalCents = produceTotalCents + deliveryFeeCents;
                 const grandTotalRand = (grandTotalCents / 100).toFixed(2);
+const orderRecord = {
+    orderNumber,
+    customerName,
+    customerPhone,
+    items: orderItems,
+    produceTotalCents,
+    deliveryFeeCents,
+    grandTotalCents,
+    paymentStatus: "PENDING",
+    orderStatus: "NEW"
+};
+
+console.log("📋 ORDER TICKET CREATED:");
+console.log(orderRecord);
 await sendOrderConfirmationTemplate(
     customerPhone,
     customerName,
