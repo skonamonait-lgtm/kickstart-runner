@@ -383,14 +383,37 @@ if (customerState && customerState.step === "INSTRUCTIONS") {
     customerState.instructions = messageData.text.body.trim();
     customerState.step = "REVIEW";
 
+    let itemsText = "";
+
+    customerState.items.forEach(item => {
+        const quantity = parseInt(item.quantity);
+        const price = parseFloat(item.item_price);
+        const lineTotal = (quantity * price).toFixed(2);
+
+        itemsText += `${quantity} × ${item.product_retailer_id} — R${lineTotal}\n`;
+    });
+
+    const productsTotal = (customerState.produceTotalCents / 100).toFixed(2);
+    const runnerFee = (customerState.deliveryFeeCents / 100).toFixed(2);
+    const grandTotal = (customerState.grandTotalCents / 100).toFixed(2);
+
     await sendWhatsAppMessage(
         customerPhone,
-        `Thank you. ✅\n\nYour order details are now complete.\n\nWe are preparing your order summary for confirmation.`
+        `🧾 *Please review your order*\n\n` +
+        `*Name:* ${customerState.officialName}\n` +
+        `*Location:* ${customerState.location}\n` +
+        `*Runner time:* ${customerState.runnerTime}\n` +
+        `*Instructions:* ${customerState.instructions}\n\n` +
+        `*Items:*\n${itemsText}\n` +
+        `Products: R${productsTotal}\n` +
+        `Runner: R${runnerFee}\n` +
+        `*TOTAL: R${grandTotal}*\n\n` +
+        `If everything is correct, reply *YES*.\n` +
+        `If something needs changing, reply *NO*.`
     );
 
     return res.sendStatus(200);
 }
-
 
                     if (textReceived === 'test' || textReceived === 'this is a text message') {
                     console.log(`🔄 Test sequence engaged! Requesting live link...`);
