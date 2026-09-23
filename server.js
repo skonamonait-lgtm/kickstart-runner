@@ -509,6 +509,8 @@ if (customerState && customerState.step === "REVIEW") {
         );
 
         checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
+        customerState.yocoCheckoutId = yocoResponse.data.id;
+customerState.orderRecord.yocoCheckoutId = customerState.yocoCheckoutId;
 
     } catch (yocoError) {
         console.error(
