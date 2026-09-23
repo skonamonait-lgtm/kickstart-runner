@@ -414,7 +414,34 @@ if (customerState && customerState.step === "INSTRUCTIONS") {
 
     return res.sendStatus(200);
 }
+// Customer review confirmation flow
+if (customerState && customerState.step === "REVIEW") {
 
+    if (textReceived === "yes") {
+
+        customerState.step = "PAYMENT";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `Thank you, ${customerState.officialName}. ✅\n\n` +
+            `Your order *${customerState.orderNumber}* has been confirmed.\n\n` +
+            `Total to pay: *R${(customerState.grandTotalCents / 100).toFixed(2)}*\n\n` +
+            `We are preparing your secure payment link. 💳`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    if (textReceived === "no") {
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `No problem. 👍\n\nPlease tell us what you would like to change about your order.`
+        );
+
+        return res.sendStatus(200);
+    }
+}
                     if (textReceived === 'test' || textReceived === 'this is a text message') {
                     console.log(`🔄 Test sequence engaged! Requesting live link...`);
                     
