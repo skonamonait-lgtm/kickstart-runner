@@ -200,6 +200,36 @@ if (req.query.key !== 'kickstart2026') return res.sendStatus(403);
         });
     }
 });
+// TEST YOCO WEBHOOK
+app.get('/test-yoco-webhook', async (req, res) => {
+    if (req.query.key !== 'kickstart2026') return res.sendStatus(403);
+
+    try {
+        const response = await axios.post(
+            'https://api.yoco.com/v1/webhooks/subscriptions/ep_3Jg8Cu3nf9qhA7He4GZmx4cOLFx/test',
+            {},
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + process.env.YOCO_WEBHOOK_API_KEY.trim(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log("✅ Yoco test webhook requested:", response.data);
+        res.json(response.data);
+
+    } catch (error) {
+        console.error(
+            "❌ Yoco test webhook failed:",
+            error.response?.data || error.message
+        );
+
+        res.status(500).json({
+            error: error.response?.data || error.message
+        });
+    }
+});
 // 3. Main Processing Router
 app.post('/webhook', async (req, res) => {
     try {
