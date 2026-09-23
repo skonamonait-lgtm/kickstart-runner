@@ -360,6 +360,19 @@ if (customerState && customerState.step === "LOCATION") {
 
     return res.sendStatus(200);
 }
+// Customer time flow
+if (customerState && customerState.step === "TIME") {
+
+    customerState.runnerTime = messageData.text.body.trim();
+    customerState.step = "INSTRUCTIONS";
+
+    await sendWhatsAppMessage(
+        customerPhone,
+        `Thank you. 🏃\n\nDo you have any special instructions for your Runner?\n\nIf yes, please type them.\nIf none, reply *NONE*.`
+    );
+
+    return res.sendStatus(200);
+}
 
 
                     if (textReceived === 'test' || textReceived === 'this is a text message') {
