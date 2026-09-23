@@ -347,6 +347,20 @@ if (customerState && customerState.step === "NAME") {
 
     return res.sendStatus(200);
 }
+// Customer location flow
+if (customerState && customerState.step === "LOCATION") {
+
+    customerState.location = messageData.text.body.trim();
+    customerState.step = "TIME";
+
+    await sendWhatsAppMessage(
+        customerPhone,
+        `Thank you. 📍\n\nWhat time would you prefer your Runner?\n\nPlease reply with a preferred time, for example:\n*14:00–16:00*\nor\n*16:00–18:00*`
+    );
+
+    return res.sendStatus(200);
+}
+
 
                     if (textReceived === 'test' || textReceived === 'this is a text message') {
                     console.log(`🔄 Test sequence engaged! Requesting live link...`);
