@@ -271,6 +271,10 @@ customerStates[customerPhone] = {
                 const deliveryFeeCents = 5000; 
                 const grandTotalCents = produceTotalCents + deliveryFeeCents;
                 const grandTotalRand = (grandTotalCents / 100).toFixed(2);
+                customerStates[customerPhone].items = orderItems;
+customerStates[customerPhone].produceTotalCents = produceTotalCents;
+customerStates[customerPhone].deliveryFeeCents = deliveryFeeCents;
+customerStates[customerPhone].grandTotalCents = grandTotalCents;
 const orderRecord = {
     orderNumber,
     customerName,
