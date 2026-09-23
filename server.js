@@ -154,7 +154,7 @@ app.post('/yoco-webhook', (req, res) => {
     console.log("💳 Yoco webhook received");
 
     try {
-        const webhook = new Webhook(process.env.YOCO_WEBHOOK_SECRET);
+        const webhook = new Webhook(process.env.YOCO_CHECKOUT_WEBHOOK_SECRET);
 
         const event = webhook.verify(
             req.rawBody,
