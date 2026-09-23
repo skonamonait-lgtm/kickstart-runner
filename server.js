@@ -22,6 +22,7 @@ app.use(express.static('public'));
 const YOCO_SECRET_KEY = process.env.YOCO_TEST_SECRET_KEY;
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const KITCHEN_WHATSAPP_NUMBER = "27797959951";
 
 const VERIFY_TOKEN = "kickstart_runner_secret_2026";
 const META_APP_ID = "1104151632136488";
@@ -176,6 +177,59 @@ console.log("🔎 Stored Checkout IDs:", Object.values(customerStates).map(state
 console.log("📋 Matching order:", order?.orderRecord?.orderNumber || "NOT FOUND");
 if (order?.orderRecord) {
     order.orderRecord.paymentStatus = "PAID";
+    let kitchenItemsText = "";
+
+order.orderRecord.items.forEach(item => {
+    const quantity = parseInt(item.quantity);
+    const price = parseFloat(item.item_price);
+    const lineTotal = (quantity * price).toFixed(2);
+
+    kitchenItemsText += `${quantity} × ${item.product_retailer_id} — R${lineTotal}\n`;
+});
+
+const kitchenProductsTotal =
+    (order.orderRecord.produceTotalCents / 100).toFixed(2);
+
+const kitchenRunnerFee =
+    (order.orderRecord.deliveryFeeCents / 100).toFixed(2);
+
+const kitchenGrandTotal =
+    (order.orderRecord.grandTotalCents / 100).toFixed(2);
+
+const kitchenOrderMessage =
+`🔔 *NEW PAID ORDER*
+
+*${order.orderRecord.orderNumber}*
+
+👤 *CUSTOMER*
+${order.orderRecord.customerName}
+📞 ${orderPhone}
+
+📍 *DELIVERY ADDRESS*
+${order.location}
+
+🏃 *RUNNER TIME*
+${order.runnerTime}
+
+📝 *INSTRUCTIONS*
+${order.instructions}
+
+*ITEMS*
+${kitchenItemsText}
+Products: R${kitchenProductsTotal}
+Runner: R${kitchenRunnerFee}
+
+*TOTAL: R${kitchenGrandTotal}*
+
+PAYMENT: *PAID* ✅
+ORDER: *NEW*`;
+
+await sendWhatsAppMessage(
+    KITCHEN_WHATSAPP_NUMBER,
+    kitchenOrderMessage
+);
+
+console.log("📋 Kitchen order sent to WhatsApp");
     console.log("💰 PAYMENT STATUS: PAID ✅");
 await sendWhatsAppMessage(
     orderPhone,
