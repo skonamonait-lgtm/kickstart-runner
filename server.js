@@ -178,7 +178,7 @@ if (order?.orderRecord) {
     order.orderRecord.paymentStatus = "PAID";
     console.log("💰 PAYMENT STATUS: PAID ✅");
 await sendWhatsAppMessage(
-    order.customerPhone,
+    orderPhone,
     `✅ Payment received.\nOrder *${order.orderRecord.orderNumber}* is confirmed.\nThank you, ${order.orderRecord.customerName}. We are preparing your order.`
 );
 }
