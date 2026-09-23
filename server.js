@@ -373,6 +373,19 @@ if (customerState && customerState.step === "TIME") {
 
     return res.sendStatus(200);
 }
+// Customer instructions flow
+if (customerState && customerState.step === "INSTRUCTIONS") {
+
+    customerState.instructions = messageData.text.body.trim();
+    customerState.step = "REVIEW";
+
+    await sendWhatsAppMessage(
+        customerPhone,
+        `Thank you. ✅\n\nYour order details are now complete.\n\nWe are preparing your order summary for confirmation.`
+    );
+
+    return res.sendStatus(200);
+}
 
 
                     if (textReceived === 'test' || textReceived === 'this is a text message') {
