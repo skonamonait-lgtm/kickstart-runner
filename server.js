@@ -3,6 +3,10 @@ const express = require('express');
 const axios = require('axios');
 const { Webhook } = require('standardwebhooks');
 const app = express();
+// ==========================================
+// CUSTOMER CONVERSATION STATE
+// ==========================================
+const customerStates = {};
 app.use(express.json({
     verify: (req, res, buf) => {
         if (req.originalUrl === '/yoco-webhook') {
@@ -250,6 +254,10 @@ app.post('/webhook', async (req, res) => {
             if (messageData.type === 'order') {
                 const orderItems = messageData.order.product_items;
                 const orderNumber = `KR-${Date.now()}`;
+customerStates[customerPhone] = {
+    step: "NAME",
+    orderNumber
+};
                 console.log(`🛒 Cart contents detected! Summarizing grand total...`);
                 
                 let produceTotalCents = 0;
@@ -277,12 +285,12 @@ const orderRecord = {
 
 console.log("📋 ORDER TICKET CREATED:");
 console.log(orderRecord);
-await sendOrderConfirmationTemplate(
+await sendWhatsAppMessage(
     customerPhone,
-    customerName,
-    orderNumber,
-    grandTotalRand
+    `Please confirm the name for your order.\n\nYour WhatsApp name is *${customerName}*.\n\nIf this is correct, reply *YES*.\nIf not, please reply with your full name.`
 );
+
+return res.sendStatus(200);
                 
                 console.log(`🎯 Target Total Bill Calculation: R${grandTotalRand}`);
 
@@ -309,7 +317,7 @@ await sendOrderConfirmationTemplate(
                if (checkoutUrl) {
     console.log(`🔥 YOCO HOSTED INVOICE READY: ${checkoutUrl}`);
 
-    const customerPaymentText = `💳 Payment link for order ${orderNumber}\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🚚 Reseller Delivery: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Please use the secure link below to complete your payment:\n👉 ${checkoutUrl}\n\nYour order will be confirmed for delivery once payment is received. 🥦🚚`;
+    const customerPaymentText = `💳 Payment link for order ${orderNumber}\n\n💰 Produce Subtotal: R${(produceTotalCents/100).toFixed(2)}\n🏃 Runner: R50.00\n💵 *Grand Total: R${grandTotalRand}*\n\n🔒 Please use the secure link below to complete your payment:\n👉 ${checkoutUrl}\n\nYour order will be confirmed once payment is received. 🥦🏃`;
 
     await sendWhatsAppMessage(customerPhone, customerPaymentText);
 } else {
@@ -319,9 +327,33 @@ await sendOrderConfirmationTemplate(
             // 💬 MODE B: Regular Text Messages (Dashboard Test Trigger)
             } else if (messageData.type === 'text') {
                 const textReceived = messageData.text.body.toLowerCase().trim();
+                const customerState = customerStates[customerPhone];
                 console.log(`💬 Inbound text received: "${textReceived}"`);
 
                 if (textReceived === 'test' || textReceived === 'this is a text message') {
+if (customerState && customerState.step === "NAME") {
+    if (textReceived === "yes") {
+        customerState.officialName = customerName;
+        customerState.step = "LOCATION";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `Thank you, ${customerState.officialName}. 📍\n\nPlease send us your delivery location.\n\nYou can type your address or use WhatsApp's location pin.`
+        );
+
+        return res.sendStatus(200);
+    }
+
+    customerState.officialName = messageData.text.body.trim();
+    customerState.step = "LOCATION";
+
+    await sendWhatsAppMessage(
+        customerPhone,
+        `Thank you, ${customerState.officialName}. 📍\n\nPlease send us your delivery location.\n\nYou can type your address or use WhatsApp's location pin.`
+    );
+
+    return res.sendStatus(200);
+}
                     console.log(`🔄 Test sequence engaged! Requesting live link...`);
                     
                     let checkoutUrl = "";
@@ -346,7 +378,7 @@ await sendOrderConfirmationTemplate(
                     
                     if (checkoutUrl) {
                         console.log(`🔥 YOCO MOCK INVOICE READY: ${checkoutUrl}`);
-                        const testMessageBody = `Hello! This is a live end-to-end connection confirmation from Kickstart Resellers. Your mock balance total including delivery is *R150.00*. Process sample checkout here: ${checkoutUrl}`;
+                        const testMessageBody = `Hello! This is a live end-to-end connection confirmation from Kickstart Resellers. Your mock balance total including  Runner is *R150.00*. Process sample checkout here: ${checkoutUrl}`;
                         await sendWhatsAppMessage(customerPhone, testMessageBody);
                     }
                 }
