@@ -291,6 +291,7 @@ const orderRecord = {
 
 console.log("📋 ORDER TICKET CREATED:");
 console.log(orderRecord);
+customerStates[customerPhone].orderRecord = orderRecord;
 await sendWhatsAppMessage(
     customerPhone,
     `Please confirm the name for your order.\n\nYour WhatsApp name is *${customerName}*.\n\nIf this is correct, reply *YES*.\nIf not, please reply with your full name.`
