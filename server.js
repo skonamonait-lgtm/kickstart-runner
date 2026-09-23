@@ -308,6 +308,7 @@ return res.sendStatus(200);
                     );
                     checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
                     customerState.yocoCheckoutId = yocoResponse.data.id;
+                    orderRecord.yocoCheckoutId = customerState.yocoCheckoutId;
                 } catch (yocoError) {
                     console.log("❌ Production Endpoint failed, checking staging fallback...");
                     try {
@@ -562,6 +563,8 @@ customerState.step = "CORRECTION";
                                 { headers: { 'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(), 'Content-Type': 'application/json' } }
                             );
                             checkoutUrl = fallbackResponse.data.redirectUrl || fallbackResponse.data.url;
+                            customerState.yocoCheckoutId = fallbackResponse.data.id;
+                            orderRecord.yocoCheckoutId = customerState.yocoCheckoutId;
                         } catch (err) {
                             console.error("❌ Double API Authentication Failure:", err.response?.data || err.message);
                         }
