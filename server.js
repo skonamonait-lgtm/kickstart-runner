@@ -22,6 +22,7 @@ app.use(express.static('public'));
 const YOCO_SECRET_KEY = process.env.YOCO_TEST_SECRET_KEY;
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const CATALOG_ID = "1384352583843730";
 const KITCHEN_WHATSAPP_NUMBER = "27797959951";
 
 const VERIFY_TOKEN = "kickstart_runner_secret_2026";
@@ -82,6 +83,40 @@ app.get('/webhook', (req, res) => {
 });
 
 // 2. Clear Outbound Message Delivery Engine
+async function getProductName(retailerId) {
+    try {
+        const response = await axios.get(
+            `https://graph.facebook.com/v26.0/${CATALOG_ID}/products`,
+            {
+                params: {
+                    fields: "retailer_id,name",
+                    filter: JSON.stringify({
+                        retailer_id: {
+                            i_contains: retailerId
+                        }
+                    }),
+                    access_token: META_ACCESS_TOKEN.trim()
+                }
+            }
+        );
+
+        const product = response.data?.data?.[0];
+
+        if (product?.name) {
+            return product.name;
+        }
+
+        return retailerId;
+
+    } catch (error) {
+        console.error(
+            `❌ Product name lookup failed for ${retailerId}:`,
+            error.response?.data || error.message
+        );
+
+        return retailerId;
+    }
+}
 async function sendWhatsAppMessage(recipientPhone, messageText) {
     try {
         const targetUrl = `https://graph.facebook.com/v26.0/${PHONE_NUMBER_ID}/messages`;
@@ -179,13 +214,14 @@ if (order?.orderRecord) {
     order.orderRecord.paymentStatus = "PAID";
     let kitchenItemsText = "";
 
-order.orderRecord.items.forEach(item => {
+for (const item of order.orderRecord.items) {
     const quantity = parseInt(item.quantity);
     const price = parseFloat(item.item_price);
     const lineTotal = (quantity * price).toFixed(2);
+    const productName = await getProductName(item.product_retailer_id);
 
-    kitchenItemsText += `${quantity} × ${item.product_retailer_id} — R${lineTotal}\n`;
-});
+    kitchenItemsText += `${quantity} × ${productName} — R${lineTotal}\n`;
+}
 
 const kitchenProductsTotal =
     (order.orderRecord.produceTotalCents / 100).toFixed(2);
@@ -459,15 +495,25 @@ if (customerState && customerState.step === "INSTRUCTIONS") {
     customerState.instructions = messageData.text.body.trim();
     customerState.step = "REVIEW";
 
-    let itemsText = "";
+   let itemsText = "";
 
-    customerState.items.forEach(item => {
-        const quantity = parseInt(item.quantity);
-        const price = parseFloat(item.item_price);
-        const lineTotal = (quantity * price).toFixed(2);
+for (const item of customerState.items) {
+    const quantity = parseInt(item.quantity);
+    const price = parseFloat(item.item_price);
+    const lineTotal = (quantity * price).toFixed(2);
+    const productName = await getProductName(item.product_retailer_id);
 
-        itemsText += `${quantity} × ${item.product_retailer_id} — R${lineTotal}\n`;
-    });
+    itemsText += `${quantity} × ${productName} — R${lineTotal}\n`;
+}
+
+   for (const item of customerState.items) {
+    const quantity = parseInt(item.quantity);
+    const price = parseFloat(item.item_price);
+    const lineTotal = (quantity * price).toFixed(2);
+    const productName = await getProductName(item.product_retailer_id);
+
+    itemsText += `${quantity} × ${productName} — R${lineTotal}\n`;
+}
 
     const productsTotal = (customerState.produceTotalCents / 100).toFixed(2);
     const runnerFee = (customerState.deliveryFeeCents / 100).toFixed(2);
