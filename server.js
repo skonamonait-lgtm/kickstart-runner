@@ -473,6 +473,8 @@ if (customerState && customerState.step === "REVIEW") {
 
     if (textReceived === "no") {
 
+customerState.step = "CORRECTION";
+
         await sendWhatsAppMessage(
             customerPhone,
             `No problem. 👍\n\nPlease tell us what you would like to change about your order.`
