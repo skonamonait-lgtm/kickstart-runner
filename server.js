@@ -207,7 +207,7 @@ app.get('/test-yoco-webhook', async (req, res) => {
     try {
         const response = await axios.post(
             'https://api.yoco.com/v1/webhooks/subscriptions/ep_3Jg8Cu3nf9qhA7He4GZmx4cOLFx/test',
-            {},
+            { event_type: 'payment.created' },
             {
                 headers: {
                     'Authorization': 'Bearer ' + process.env.YOCO_WEBHOOK_API_KEY.trim(),
