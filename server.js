@@ -165,8 +165,11 @@ app.post('/yoco-webhook', async (req, res) => {
         console.log("📦 Event:", event);
         const checkoutId = event.payload?.metadata?.checkoutId;
         console.log("🔑 Checkout ID:", checkoutId);
-        const order = Object.values(customerStates)
-    .find(state => state.orderRecord?.yocoCheckoutId === checkoutId);
+       const orderEntry = Object.entries(customerStates)
+    .find(([phone, state]) => state.orderRecord?.yocoCheckoutId === checkoutId);
+
+const order = orderEntry?.[1];
+const orderPhone = orderEntry?.[0];
 
 console.log("🔎 Looking for Checkout ID:", checkoutId);
 console.log("🔎 Stored Checkout IDs:", Object.values(customerStates).map(state => state.orderRecord?.yocoCheckoutId));
