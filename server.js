@@ -417,20 +417,59 @@ if (customerState && customerState.step === "INSTRUCTIONS") {
 // Customer review confirmation flow
 if (customerState && customerState.step === "REVIEW") {
 
-    if (textReceived === "yes") {
+  if (textReceived === "yes") {
 
-        customerState.step = "PAYMENT";
+    customerState.step = "PAYMENT";
+
+    let checkoutUrl = "";
+
+    try {
+        const yocoResponse = await axios.post(
+            'https://payments.yoco.com/api/checkouts',
+            {
+                amount: customerState.grandTotalCents,
+                currency: "ZAR",
+                successUrl: "https://whatsapp.com"
+            },
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + YOCO_SECRET_KEY.trim(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        checkoutUrl = yocoResponse.data.redirectUrl || yocoResponse.data.url;
+
+    } catch (yocoError) {
+        console.error(
+            "❌ Yoco checkout creation failed:",
+            yocoError.response?.data || yocoError.message
+        );
+    }
+
+    if (checkoutUrl) {
 
         await sendWhatsAppMessage(
             customerPhone,
             `Thank you, ${customerState.officialName}. ✅\n\n` +
             `Your order *${customerState.orderNumber}* has been confirmed.\n\n` +
             `Total to pay: *R${(customerState.grandTotalCents / 100).toFixed(2)}*\n\n` +
-            `We are preparing your secure payment link. 💳`
+            `💳 Please complete your payment here:\n${checkoutUrl}`
         );
 
-        return res.sendStatus(200);
+    } else {
+
+        customerState.step = "REVIEW";
+
+        await sendWhatsAppMessage(
+            customerPhone,
+            `We are sorry, but we could not create your payment link just now. Please try again.`
+        );
     }
+
+    return res.sendStatus(200);
+}
 
     if (textReceived === "no") {
 
